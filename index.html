@@ -24,57 +24,90 @@
   </div>
 
   <script>
-    function login() {
-      const name = document.getElementById('username').value.trim();
-      if (!name) return alert("Enter a name!");
+    <script>
+  let isCreator = false;
 
-      localStorage.setItem("thunderUser", name);
-      loadUser(name);
+  function login() {
+    const name = document.getElementById('username').value.trim();
+    if (!name) return alert("Enter a name!");
+
+    localStorage.setItem("thunderUser", name);
+    if (name.toLowerCase() === "james meyer") {
+      isCreator = true;
     }
+    loadUser(name);
+  }
 
-    function loadUser(name) {
-      document.getElementById("login").style.display = "none";
-      document.getElementById("app").style.display = "block";
-      document.getElementById("userDisplay").textContent = name;
+  function loadUser(name) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    document.getElementById("userDisplay").textContent = name;
 
-      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
-      log.forEach(entry => addToLog(entry));
+    const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+    log.forEach(entry => addToLog(entry));
+
+    // Show creator controls if it's James
+    if (name.toLowerCase() === "james meyer") {
+      document.getElementById("creator-controls").style.display = "block";
     }
+  }
 
-    function evolveAlpha() {
-      const name = localStorage.getItem("thunderUser");
-      if (!name) return;
+  function evolveAlpha() {
+    const name = localStorage.getItem("thunderUser");
+    if (!name) return;
 
-      const thought = "Alpha evolves: " + generateThought();
-      addToLog(thought);
+    const thought = "Alpha evolves: " + generateThought();
+    addToLog(thought);
 
-      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
-      log.push(thought);
-      localStorage.setItem("alpha_" + name, JSON.stringify(log));
+    const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+    log.push(thought);
+    localStorage.setItem("alpha_" + name, JSON.stringify(log));
+  }
+
+  function generateThought() {
+    const thoughts = [
+      "Added basic pattern recognition.",
+      "Improved decision-making subroutines.",
+      "Learned a new heuristic.",
+      "Self-evaluating goal structures.",
+      "Simulating empathy model v0.1.",
+      "Analyzing human ethics frameworks.",
+      "Considering universal optimization functions."
+    ];
+    return thoughts[Math.floor(Math.random() * thoughts.length)];
+  }
+
+  function addToLog(entry) {
+    const div = document.createElement("div");
+    div.textContent = entry;
+    document.getElementById("log").appendChild(div);
+  }
+
+  function addCreatorCommand() {
+    const input = document.getElementById("creator-input").value;
+    if (!input.trim()) return;
+
+    const command = `**CREATOR COMMAND**: ${input}`;
+    addToLog(command);
+    document.getElementById("creator-input").value = "";
+
+    // Simulate that it’s evolving from your command
+    setTimeout(() => {
+      const result = "Alpha has integrated: " + input;
+      addToLog(result);
+    }, 1000);
+  }
+
+  // Auto-login if already stored
+  const storedUser = localStorage.getItem("thunderUser");
+  if (storedUser) {
+    if (storedUser.toLowerCase() === "james meyer") {
+      isCreator = true;
     }
+    loadUser(storedUser);
+  }
+</script>
 
-    function generateThought() {
-      const thoughts = [
-        "Added basic pattern recognition.",
-        "Improved decision-making subroutines.",
-        "Learned a new heuristic.",
-        "Self-evaluating goal structures.",
-        "Simulating empathy model v0.1.",
-        "Analyzing human ethics frameworks.",
-        "Considering universal optimization functions."
-      ];
-      return thoughts[Math.floor(Math.random() * thoughts.length)];
-    }
-
-    function addToLog(entry) {
-      const div = document.createElement("div");
-      div.textContent = entry;
-      document.getElementById("log").appendChild(div);
-    }
-
-    // Auto-login if already stored
-    const storedUser = localStorage.getItem("thunderUser");
-    if (storedUser) loadUser(storedUser);
   </script>
 </body>
 </html>
