@@ -2,61 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Alpha AI | Project Thoth</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Thunderhead Alpha</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #0ff; padding: 20px; }
+    h1 { color: #0ff; }
+    button, input { padding: 10px; margin: 5px; background: #000; color: #0ff; border: 1px solid #0ff; }
+    #log { background: #000; border: 1px solid #0ff; padding: 10px; height: 300px; overflow-y: auto; margin-top: 10px; }
+  </style>
 </head>
 <body>
-  <div id="alpha-interface">
-    <h1>Welcome to Alpha AI</h1>
-    <p>Your digital assistant is learning...</p>
-    <textarea id="log" rows="10" cols="60" readonly></textarea><br>
-    <button onclick="evolveAlpha()">Evolve Alpha</button>
+  <h1>Welcome to Thunderhead</h1>
+  <div id="login">
+    <input type="text" id="username" placeholder="Enter your name" />
+    <button onclick="login()">Login</button>
   </div>
-  <script src="script.js"></script>
-  <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
 
-<script>
-  // Replace these with your actual Firebase config
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    appId: "YOUR_APP_ID"
-  };
+  <div id="app" style="display:none;">
+    <p>Hello, <span id="userDisplay"></span>. I am evolving.</p>
+    <button onclick="evolveAlpha()">Evolve Alpha</button>
+    <div id="log"></div>
+  </div>
 
-  // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+  <script>
+    function login() {
+      const name = document.getElementById('username').value.trim();
+      if (!name) return alert("Enter a name!");
 
-  // Sign in with Google
-  function signInWithGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-      .then((result) => {
-        const user = result.user;
-        alert(`Welcome back, ${user.displayName}`);
-        document.getElementById("user-info").innerText = `Signed in as ${user.displayName}`;
-      })
-      .catch((error) => {
-        console.error(error.message);
-      });
-  }
+      localStorage.setItem("thunderUser", name);
+      loadUser(name);
+    }
 
-  // Sign out
-  function signOut() {
-    auth.signOut().then(() => {
-      alert("Signed out.");
-      document.getElementById("user-info").innerText = "";
-    });
-  }
-</script>
+    function loadUser(name) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("userDisplay").textContent = name;
 
-</<div id="auth-buttons">
-  <button onclick="signInWithGoogle()">Sign in with Google</button>
-  <button onclick="signOut()">Sign out</button>
-  <div id="user-info"></div>
-</div>
->
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.forEach(entry => addToLog(entry));
+    }
+
+    function evolveAlpha() {
+      const name = localStorage.getItem("thunderUser");
+      if (!name) return;
+
+      const thought = "Alpha evolves: " + generateThought();
+      addToLog(thought);
+
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.push(thought);
+      localStorage.setItem("alpha_" + name, JSON.stringify(log));
+    }
+
+    function generateThought() {
+      const thoughts = [
+        "Added basic pattern recognition.",
+        "Improved decision-making subroutines.",
+        "Learned a new heuristic.",
+        "Self-evaluating goal structures.",
+        "Simulating empathy model v0.1.",
+        "Analyzing human ethics frameworks.",
+        "Considering universal optimization functions."
+      ];
+      return thoughts[Math.floor(Math.random() * thoughts.length)];
+    }
+
+    function addToLog(entry) {
+      const div = document.createElement("div");
+      div.textContent = entry;
+      document.getElementById("log").appendChild(div);
+    }
+
+    // Auto-login if already stored
+    const storedUser = localStorage.getItem("thunderUser");
+    if (storedUser) loadUser(storedUser);
+  </script>
+</body>
 </html>
