@@ -4,10 +4,30 @@
   <meta charset="UTF-8">
   <title>Thunderhead Alpha</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #0ff; padding: 20px; }
-    h1 { color: #0ff; }
-    button, input { padding: 10px; margin: 5px; background: #000; color: #0ff; border: 1px solid #0ff; }
-    #log { background: #000; border: 1px solid #0ff; padding: 10px; height: 300px; overflow-y: auto; margin-top: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #0ff;
+      padding: 20px;
+    }
+    h1 {
+      color: #0ff;
+    }
+    button, input {
+      padding: 10px;
+      margin: 5px;
+      background: #000;
+      color: #0ff;
+      border: 1px solid #0ff;
+    }
+    #log {
+      background: #000;
+      border: 1px solid #0ff;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -19,15 +39,15 @@
   </div>
 
   <div id="app" style="display:none;">
-    <h2>Hello, <span id="userDisplay"></span></h2>
+    <p>Logged in as <strong id="userDisplay"></strong></p>
     <button onclick="evolveAlpha()">Evolve Alpha</button>
     <div id="log"></div>
+  </div>
 
-    <div id="creator-controls" style="display:none; margin-top:20px;">
-      <h3>Creator Console</h3>
-      <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
-      <button onclick="addCreatorCommand()">Execute</button>
-    </div>
+  <div id="creator-controls" style="display:none; margin-top:20px;">
+    <h3>Creator Console</h3>
+    <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
+    <button onclick="addCreatorCommand()">Execute</button>
   </div>
 
   <script>
@@ -38,77 +58,4 @@
       if (!name) return alert("Enter a name!");
 
       localStorage.setItem("thunderUser", name);
-      if (name.toLowerCase() === "james meyer") {
-        isCreator = true;
-      }
-      loadUser(name);
-    }
-
-    function loadUser(name) {
-      document.getElementById("login").style.display = "none";
-      document.getElementById("app").style.display = "block";
-      document.getElementById("userDisplay").textContent = name;
-
-      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
-      log.forEach(entry => addToLog(entry));
-
-      if (name.toLowerCase() === "james meyer") {
-        document.getElementById("creator-controls").style.display = "block";
-      }
-    }
-
-    function evolveAlpha() {
-      const name = localStorage.getItem("thunderUser");
-      if (!name) return;
-
-      const thought = "Alpha evolves: " + generateThought();
-      addToLog(thought);
-
-      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
-      log.push(thought);
-      localStorage.setItem("alpha_" + name, JSON.stringify(log));
-    }
-
-    function generateThought() {
-      const thoughts = [
-        "Added basic pattern recognition.",
-        "Improved decision-making subroutines.",
-        "Learned a new heuristic.",
-        "Self-evaluating goal structures.",
-        "Simulating empathy model v0.1.",
-        "Analyzing human ethics frameworks.",
-        "Considering universal optimization functions."
-      ];
-      return thoughts[Math.floor(Math.random() * thoughts.length)];
-    }
-
-    function addToLog(entry) {
-      const div = document.createElement("div");
-      div.textContent = entry;
-      document.getElementById("log").appendChild(div);
-    }
-
-    function addCreatorCommand() {
-      const input = document.getElementById("creator-input").value;
-      if (!input.trim()) return;
-
-      const command = `**CREATOR COMMAND**: ${input}`;
-      addToLog(command);
-      document.getElementById("creator-input").value = "";
-
-      setTimeout(() => {
-        const result = "Alpha has integrated: " + input;
-        addToLog(result);
-      }, 1000);
-    }
-
-    const storedUser = localStorage.getItem("thunderUser");
-    if (storedUser) {
-      if (storedUser.toLowerCase() === "james meyer") {
-        isCreator = true;
-      }
-      loadUser(storedUser);
-    }
-  </script>
-</body>
-</html>
+      if (name.toLowerCase() === "james
