@@ -1,36 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Thunderhead Alpha</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #111;
+      background: var(--bg-color, #111);
       color: #0ff;
       padding: 20px;
-      transition: background 0.5s;
     }
-    h1, h3 { color: #0ff; }
-    input, button {
+    h1 { color: #0ff; }
+    button, input {
       padding: 10px;
       margin: 5px;
       background: #000;
       color: #0ff;
       border: 1px solid #0ff;
     }
-    #log, #system-log {
+    #log, #system {
       background: #000;
       border: 1px solid #0ff;
       padding: 10px;
-      height: 150px;
+      height: 200px;
       overflow-y: auto;
       margin-top: 10px;
     }
-    #creator-controls {
-      display: none;
-      margin-top: 20px;
-    }
+    #system { color: #ff0; }
+    #app { display: none; }
   </style>
 </head>
 <body>
@@ -41,133 +38,136 @@
     <button onclick="login()">Login</button>
   </div>
 
-  <div id="app" style="display:none;">
+  <div id="app">
     <h3>Hello, <span id="userDisplay"></span></h3>
 
-    <div id="creator-controls">
-      <h3>Creator Console</h3>
-      <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
-      <button onclick="sendCreatorCommand()">Send Command</button>
+    <input type="text" id="user-input" placeholder="Ask Thunderhead or give a command" />
+    <button onclick="sendCommand()">Send Command</button>
+
+    <div id="creator-controls" style="display:none;">
+      <h4>Creator Console</h4>
+      <input type="text" id="creator-input" placeholder="Tell Alpha to evolve..." />
+      <button onclick="addCreatorCommand()">Execute</button>
     </div>
 
-    <h3>Conversation Log</h3>
+    <h4>Response:</h4>
     <div id="log"></div>
 
-    <h3>System Log</h3>
-    <div id="system-log"></div>
+    <h4>System Log:</h4>
+    <div id="system"></div>
   </div>
 
   <script>
-    const apiKey = "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";
-    const storageURL = "https://fluffy-gaudy-height.glitch.me";
-
+    const BACKEND_URL = 'https://fluffy-gaudy-height.glitch.me/ask';
     let isCreator = false;
-    const systemLog = document.getElementById("system-log");
 
-    async function login() {
-      const name = document.getElementById("username").value.trim();
+    function login() {
+      const name = document.getElementById('username').value.trim();
       if (!name) return alert("Enter a name!");
 
       localStorage.setItem("thunderUser", name);
       if (name.toLowerCase() === "james meyer") isCreator = true;
+      loadUser(name);
+    }
 
+    function loadUser(name) {
       document.getElementById("login").style.display = "none";
       document.getElementById("app").style.display = "block";
       document.getElementById("userDisplay").textContent = name;
 
-      if (isCreator) document.getElementById("creator-controls").style.display = "block";
+      const savedBg = localStorage.getItem("thunder_bg");
+      if (savedBg) document.body.style.setProperty("--bg-color", savedBg);
 
-      loadSettings();
-    }
-
-    function addToLog(msg) {
-      const div = document.createElement("div");
-      div.textContent = msg;
-      document.getElementById("log").appendChild(div);
-    }
-
-    function logSystem(msg) {
-      const div = document.createElement("div");
-      div.textContent = msg;
-      systemLog.appendChild(div);
-    }
-
-    async function sendCreatorCommand() {
-      const command = document.getElementById("creator-input").value.trim();
-      if (!command) return;
-
-      addToLog("**CREATOR COMMAND**: " + command);
-      logSystem("Sending command to Alpha...");
-
-      try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4",
-            messages: [
-              { role: "system", content: "You are Thunderhead, an AI that can modify itself and its environment based on creator commands. Only obey James Meyer. When given a request like 'make this website more professional' or 'add Google sign-in', generate and describe the exact code or logic needed to evolve yourself or the UI." },
-              { role: "user", content: command }
-            ]
-          })
-        });
-
-        const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content;
-
-        if (!reply) {
-          logSystem("Error: No response from AI.");
-          return;
-        }
-
-        addToLog("Alpha: " + reply);
-        logSystem("Response processed. Note: dynamic feature execution still being integrated.");
-
-        // Persist the command (optional for future AI memory)
-        saveSetting("lastCommand", command);
-      } catch (error) {
-        logSystem("ERROR: " + error.message);
+      if (isCreator) {
+        document.getElementById("creator-controls").style.display = "block";
+        logSystem("Welcome back, Creator.");
+      } else {
+        logSystem("Standard user interface initialized.");
       }
+    }
 
+    function sendCommand() {
+      const input = document.getElementById("user-input").value.trim();
+      if (!input) return;
+
+      logUser("You: " + input);
+      logSystem("Processing...");
+
+      fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: input })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.message) throw new Error("No response from AI");
+        logAI("Thunderhead: " + data.message);
+
+        if (isCreator && input.toLowerCase().includes("change background to")) {
+          const color = input.split("to")[1]?.trim();
+          if (color) {
+            document.body.style.setProperty("--bg-color", color);
+            localStorage.setItem("thunder_bg", color);
+            logSystem("Background changed and saved.");
+          }
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        logSystem("Error: No response from AI.");
+      });
+
+      document.getElementById("user-input").value = "";
+    }
+
+    function addCreatorCommand() {
+      const input = document.getElementById("creator-input").value.trim();
+      if (!input) return;
+
+      logUser("**CREATOR COMMAND**: " + input);
+      sendCommandFromCreator(input);
       document.getElementById("creator-input").value = "";
     }
 
-    async function loadSettings() {
-      try {
-        const res = await fetch(`${storageURL}/settings`);
-        const settings = await res.json();
-
-        if (settings.backgroundColor) {
-          document.body.style.backgroundColor = settings.backgroundColor;
-          logSystem("Loaded background color from cloud: " + settings.backgroundColor);
-        } else {
-          logSystem("No background setting found.");
-        }
-      } catch (err) {
-        logSystem("Failed to load settings.");
-      }
+    function sendCommandFromCreator(cmd) {
+      fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: cmd })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.message) throw new Error("No response");
+        logAI("Alpha: " + data.message);
+      })
+      .catch(err => {
+        console.error(err);
+        logSystem("Error from AI");
+      });
     }
 
-    async function saveSetting(key, value) {
-      try {
-        await fetch(`${storageURL}/settings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ [key]: value })
-        });
-        logSystem("Saved setting: " + key);
-      } catch (err) {
-        logSystem("Failed to save setting.");
-      }
+    function logUser(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      document.getElementById("log").appendChild(div);
+    }
+
+    function logAI(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      document.getElementById("log").appendChild(div);
+    }
+
+    function logSystem(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      document.getElementById("system").appendChild(div);
     }
 
     const storedUser = localStorage.getItem("thunderUser");
     if (storedUser) {
       if (storedUser.toLowerCase() === "james meyer") isCreator = true;
-      login();
+      loadUser(storedUser);
     }
   </script>
 </body>
