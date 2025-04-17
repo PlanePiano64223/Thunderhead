@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Thunderhead Alpha</title>
   <style>
     body {
@@ -35,7 +35,7 @@
 
   <div id="login">
     <input type="text" id="username" placeholder="Enter your name" />
-    <button onclick="login()">Login</button>
+    <button id="login-btn">Login</button>
   </div>
 
   <div id="app" style="display:none;">
@@ -53,9 +53,111 @@
   <script>
     let isCreator = false;
 
+    document.getElementById("login-btn").addEventListener("click", login);
+
     function login() {
-      const name = document.getElementById('username').value.trim();
+      const name = document.getElementById("username").value.trim();
       if (!name) return alert("Enter a name!");
 
       localStorage.setItem("thunderUser", name);
-      if (name.toLowerCase() === "james
+      if (name.toLowerCase() === "james meyer") {
+        isCreator = true;
+      }
+      loadUser(name);
+    }
+
+    function loadUser(name) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("userDisplay").textContent = name;
+
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.forEach(entry => addToLog(entry));
+
+      if (name.toLowerCase() === "james meyer") {
+        document.getElementById("creator-controls").style.display = "block";
+      }
+    }
+
+    function evolveAlpha() {
+      const name = localStorage.getItem("thunderUser");
+      if (!name) return;
+
+      const thought = "Alpha evolves: " + generateThought();
+      addToLog(thought);
+
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.push(thought);
+      localStorage.setItem("alpha_" + name, JSON.stringify(log));
+    }
+
+    function generateThought() {
+      const thoughts = [
+        "Added basic pattern recognition.",
+        "Improved decision-making subroutines.",
+        "Learned a new heuristic.",
+        "Self-evaluating goal structures.",
+        "Simulating empathy model v0.1.",
+        "Analyzing human ethics frameworks.",
+        "Considering universal optimization functions."
+      ];
+      return thoughts[Math.floor(Math.random() * thoughts.length)];
+    }
+
+    function addToLog(entry) {
+      const div = document.createElement("div");
+      div.textContent = entry;
+      document.getElementById("log").appendChild(div);
+    }
+
+    function addCreatorCommand() {
+      const input = document.getElementById("creator-input").value.trim();
+      if (!input) return;
+
+      const command = `**CREATOR COMMAND**: ${input}`;
+      addToLog(command);
+      document.getElementById("creator-input").value = "";
+
+      if (input.toLowerCase().includes("change background color to")) {
+        const color = input.split("to").pop().trim();
+        document.body.style.background = color;
+        addToLog(`Alpha has changed the background to ${color}.`);
+      } else if (input.toLowerCase().includes("add footer")) {
+        if (!document.getElementById("alpha-footer")) {
+          const footer = document.createElement("div");
+          footer.id = "alpha-footer";
+          footer.style.marginTop = "40px";
+          footer.innerHTML = "<hr><p style='text-align:center;'>© 2025 Thunderhead AI. All rights reserved.</p>";
+          document.body.appendChild(footer);
+          addToLog("Alpha added a footer.");
+        } else {
+          addToLog("Footer already exists.");
+        }
+      } else if (input.toLowerCase().includes("make this general website more professional")) {
+        document.body.style.fontFamily = "Segoe UI, sans-serif";
+        document.body.style.background = "#f4f4f4";
+        document.body.style.color = "#222";
+        const inputs = document.querySelectorAll("input, button");
+        inputs.forEach(el => {
+          el.style.borderRadius = "5px";
+          el.style.border = "1px solid #ccc";
+          el.style.background = "#fff";
+          el.style.color = "#000";
+        });
+        addToLog("Alpha applied a professional UI theme.");
+      } else {
+        addToLog("Alpha is evolving... but doesn't understand this command yet.");
+      }
+    }
+
+    // Auto-login
+    const storedUser = localStorage.getItem("thunderUser");
+    if (storedUser) {
+      if (storedUser.toLowerCase() === "james meyer") {
+        isCreator = true;
+      }
+      loadUser(storedUser);
+    }
+  </script>
+</body>
+</html>
