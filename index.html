@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Thunderhead Alpha</title>
-  <style>
+  <style id="dynamic-style">
     body {
       font-family: Arial, sans-serif;
-      background: var(--bg-color, #111);
+      background: #111;
       color: #0ff;
       padding: 20px;
     }
-    h1 { color: #0ff; }
+    h1 {
+      color: #0ff;
+    }
     button, input {
       padding: 10px;
       margin: 5px;
@@ -18,55 +20,46 @@
       color: #0ff;
       border: 1px solid #0ff;
     }
-    #log, #system {
+    #log {
       background: #000;
       border: 1px solid #0ff;
       padding: 10px;
-      height: 200px;
+      height: 300px;
       overflow-y: auto;
       margin-top: 10px;
     }
-    #system { color: #ff0; }
-    #app { display: none; }
+    #creator-controls {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
   <h1>Welcome to Thunderhead</h1>
-
   <div id="login">
     <input type="text" id="username" placeholder="Enter your name" />
     <button onclick="login()">Login</button>
   </div>
 
-  <div id="app">
-    <h3>Hello, <span id="userDisplay"></span></h3>
-
-    <input type="text" id="user-input" placeholder="Ask Thunderhead or give a command" />
-    <button onclick="sendCommand()">Send Command</button>
-
-    <div id="creator-controls" style="display:none;">
-      <h4>Creator Console</h4>
-      <input type="text" id="creator-input" placeholder="Tell Alpha to evolve..." />
-      <button onclick="addCreatorCommand()">Execute</button>
-    </div>
-
-    <h4>Response:</h4>
+  <div id="app" style="display:none;">
+    <p>Hello, <span id="userDisplay"></span></p>
     <div id="log"></div>
+  </div>
 
-    <h4>System Log:</h4>
-    <div id="system"></div>
+  <div id="creator-controls" style="display:none;">
+    <h3>Creator Console</h3>
+    <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
+    <button onclick="addCreatorCommand()">Send Command</button>
   </div>
 
   <script>
-    const BACKEND_URL = 'https://fluffy-gaudy-height.glitch.me/ask';
     let isCreator = false;
 
     function login() {
       const name = document.getElementById('username').value.trim();
       if (!name) return alert("Enter a name!");
-
       localStorage.setItem("thunderUser", name);
-      if (name.toLowerCase() === "james meyer") isCreator = true;
+
+      isCreator = (name.toLowerCase() === "james meyer");
       loadUser(name);
     }
 
@@ -75,100 +68,41 @@
       document.getElementById("app").style.display = "block";
       document.getElementById("userDisplay").textContent = name;
 
-      const savedBg = localStorage.getItem("thunder_bg");
-      if (savedBg) document.body.style.setProperty("--bg-color", savedBg);
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.forEach(entry => addToLog(entry));
 
       if (isCreator) {
         document.getElementById("creator-controls").style.display = "block";
-        logSystem("Welcome back, Creator.");
-      } else {
-        logSystem("Standard user interface initialized.");
       }
     }
 
-    function sendCommand() {
-      const input = document.getElementById("user-input").value.trim();
-      if (!input) return;
-
-      logUser("You: " + input);
-      logSystem("Processing...");
-
-      fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: input })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.message) throw new Error("No response from AI");
-        logAI("Thunderhead: " + data.message);
-
-        if (isCreator && input.toLowerCase().includes("change background to")) {
-          const color = input.split("to")[1]?.trim();
-          if (color) {
-            document.body.style.setProperty("--bg-color", color);
-            localStorage.setItem("thunder_bg", color);
-            logSystem("Background changed and saved.");
-          }
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        logSystem("Error: No response from AI.");
-      });
-
-      document.getElementById("user-input").value = "";
+    function addToLog(entry) {
+      const div = document.createElement("div");
+      div.textContent = entry;
+      document.getElementById("log").appendChild(div);
     }
 
     function addCreatorCommand() {
       const input = document.getElementById("creator-input").value.trim();
       if (!input) return;
 
-      logUser("**CREATOR COMMAND**: " + input);
-      sendCommandFromCreator(input);
+      const command = `**CREATOR COMMAND**: ${input}`;
+      addToLog(command);
+
+      // Save to local storage log
+      const name = localStorage.getItem("thunderUser");
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.push(command);
+      localStorage.setItem("alpha_" + name, JSON.stringify(log));
+
+      interpretCommand(input);
       document.getElementById("creator-input").value = "";
     }
 
-    function sendCommandFromCreator(cmd) {
-      fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: cmd })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.message) throw new Error("No response");
-        logAI("Alpha: " + data.message);
-      })
-      .catch(err => {
-        console.error(err);
-        logSystem("Error from AI");
-      });
-    }
+    function interpretCommand(command) {
+      const lower = command.toLowerCase();
 
-    function logUser(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      document.getElementById("log").appendChild(div);
-    }
-
-    function logAI(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      document.getElementById("log").appendChild(div);
-    }
-
-    function logSystem(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      document.getElementById("system").appendChild(div);
-    }
-
-    const storedUser = localStorage.getItem("thunderUser");
-    if (storedUser) {
-      if (storedUser.toLowerCase() === "james meyer") isCreator = true;
-      loadUser(storedUser);
-    }
-  </script>
-</body>
-</html>
+      if (lower.includes("more professional")) {
+        makeSiteLookProfessional();
+      } else {
+        addTo
