@@ -1,94 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Thunderhead Alpha</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #0ff;
-      padding: 20px;
-    }
-    h1 {
-      color: #0ff;
-    }
-    button, input {
-      padding: 10px;
-      margin: 5px;
-      background: #000;
-      color: #0ff;
-      border: 1px solid #0ff;
-      width: 100%;
-      max-width: 300px;
-    }
-    #log {
-      background: #000;
-      border: 1px solid #0ff;
-      padding: 10px;
-      height: 300px;
-      overflow-y: auto;
-      margin-top: 10px;
-    }
-    #creator-controls, #app {
-      margin-top: 20px;
-    }
+    body { font-family: Arial, sans-serif; background: #111; color: #0ff; padding: 20px; }
+    h1 { color: #0ff; }
+    button, input { padding: 10px; margin: 5px; background: #000; color: #0ff; border: 1px solid #0ff; }
+    #log { background: #000; border: 1px solid #0ff; padding: 10px; height: 300px; overflow-y: auto; margin-top: 10px; }
   </style>
 </head>
 <body>
   <h1>Welcome to Thunderhead</h1>
-
   <div id="login">
     <input type="text" id="username" placeholder="Enter your name" />
-    <button id="login-btn">Login</button>
+    <button onclick="login()">Login</button>
   </div>
 
   <div id="app" style="display:none;">
-    <p>Logged in as <strong id="userDisplay"></strong></p>
-    <button onclick="evolveAlpha()">Evolve Alpha</button>
+    <h2>Hello, <span id="userDisplay"></span></h2>
+    <div id="creator-controls" style="display:none;">
+      <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
+      <button onclick="sendCommand()">Send Command</button>
+    </div>
     <div id="log"></div>
   </div>
 
-  <div id="creator-controls" style="display:none;">
-    <h3>Creator Console</h3>
-    <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
-    <button onclick="addCreatorCommand()">Execute</button>
-  </div>
-
   <script>
-    let isCreator = false;
-
-    // This ensures the DOM is ready even on mobile
-    document.addEventListener("DOMContentLoaded", function () {
-      const loginBtn = document.getElementById("login-btn");
-      if (loginBtn) {
-        loginBtn.addEventListener("click", login);
-      }
-
-      const storedUser = localStorage.getItem("thunderUser");
-      if (storedUser) {
-        if (storedUser.toLowerCase() === "james meyer") {
-          isCreator = true;
-        }
-        loadUser(storedUser);
-      }
-    });
+    const backendURL = "https://fluffy-gaudy-height.glitch.me"; // Your Glitch backend URL
 
     function login() {
-      const name = document.getElementById("username").value.trim();
+      const name = document.getElementById('username').value.trim();
       if (!name) return alert("Enter a name!");
 
       localStorage.setItem("thunderUser", name);
-      if (name.toLowerCase() === "james meyer") {
-        isCreator = true;
-      }
-      loadUser(name);
-    }
-
-    function loadUser(name) {
       document.getElementById("login").style.display = "none";
       document.getElementById("app").style.display = "block";
       document.getElementById("userDisplay").textContent = name;
 
-      const log = JSON.parse(localStorage
+      if (name.toLowerCase() === "james meyer") {
+        document.getElementById("creator-controls").style.display = "block";
+      }
+
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.forEach(entry => addToLog(entry));
+    }
+
+    function sendCommand() {
+      const input = document.getElementById("creator-input").value;
+      const name = localStorage.getItem("thunderUser");
+
+      if (!input.trim()) return;
+
+      fetch(`${backendURL}/improve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: input, user: name })
+      })
+      .then(res => res.json())
+      .then(data => {
+        addToLog("**CREATOR COMMAND**: " + input);
+        addToLog(data.result || "No response from Alpha.");
+        saveToLocal(name, "**CREATOR COMMAND**: " + input);
+        saveToLocal(name, data.result);
+        document.getElementById("creator-input").value = "";
+      })
+      .catch(err => {
+        console.error(err);
+        addToLog("Error talking to Alpha.");
+      });
+    }
+
+    function addToLog(entry) {
+      const div = document.createElement("div");
+      div.textContent = entry;
+      document.getElementById("log").appendChild(div);
+    }
+
+    function saveToLocal(user, entry) {
+      const log = JSON.parse(localStorage.getItem("alpha_" + user)) || [];
+      log.push(entry);
+      localStorage.setItem("alpha_" + user, JSON.stringify(log));
+    }
+
+    // Auto-login if stored
+    const storedUser = localStorage.getItem("thunderUser");
+    if (storedUser) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("userDisplay").textContent = storedUser;
+
+      if (storedUser.toLowerCase() === "james meyer") {
+        document.getElementById("creator-controls").style.display = "block";
+      }
+
+      const log = JSON.parse(localStorage.getItem("alpha_" + storedUser)) || [];
+      log.forEach(entry => addToLog(entry));
+    }
+  </script>
+</body>
+</html>
