@@ -15,3 +15,42 @@
   <script src="script.js"></script>
 </body>
 </html>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
+
+<script>
+  // Replace these with your actual Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  // Sign in with Google
+  function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then((result) => {
+        const user = result.user;
+        alert(`Welcome back, ${user.displayName}`);
+        document.getElementById("user-info").innerText = `Signed in as ${user.displayName}`;
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
+  }
+
+  // Sign out
+  function signOut() {
+    auth.signOut().then(() => {
+      alert("Signed out.");
+      document.getElementById("user-info").innerText = "";
+    });
+  }
+</script>
