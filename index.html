@@ -30,22 +30,25 @@
     }
     #creator-controls {
       margin-top: 20px;
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Welcome to Thunderhead</h1>
+
   <div id="login">
     <input type="text" id="username" placeholder="Enter your name" />
     <button onclick="login()">Login</button>
   </div>
 
   <div id="app" style="display:none;">
-    <p>Hello, <span id="userDisplay"></span></p>
+    <h3>Hello, <span id="userDisplay"></span></h3>
+    <button onclick="evolveAlpha()">Evolve Alpha</button>
     <div id="log"></div>
   </div>
 
-  <div id="creator-controls" style="display:none;">
+  <div id="creator-controls">
     <h3>Creator Console</h3>
     <input id="creator-input" type="text" placeholder="Command Alpha to evolve..." />
     <button onclick="addCreatorCommand()">Send Command</button>
@@ -58,8 +61,7 @@
       const name = document.getElementById('username').value.trim();
       if (!name) return alert("Enter a name!");
       localStorage.setItem("thunderUser", name);
-
-      isCreator = (name.toLowerCase() === "james meyer");
+      if (name.toLowerCase() === "james meyer") isCreator = true;
       loadUser(name);
     }
 
@@ -67,13 +69,31 @@
       document.getElementById("login").style.display = "none";
       document.getElementById("app").style.display = "block";
       document.getElementById("userDisplay").textContent = name;
-
       const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
       log.forEach(entry => addToLog(entry));
+      if (isCreator) document.getElementById("creator-controls").style.display = "block";
+      applySavedStyles();
+    }
 
-      if (isCreator) {
-        document.getElementById("creator-controls").style.display = "block";
-      }
+    function evolveAlpha() {
+      const name = localStorage.getItem("thunderUser");
+      if (!name) return;
+      const thought = "Alpha evolves: " + generateThought();
+      addToLog(thought);
+      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
+      log.push(thought);
+      localStorage.setItem("alpha_" + name, JSON.stringify(log));
+    }
+
+    function generateThought() {
+      const thoughts = [
+        "Enhanced logic tree algorithms.",
+        "Improved memory caching.",
+        "Refined user interface subroutines.",
+        "Simulating human decision weight mapping.",
+        "Self-calibrating intuition protocols."
+      ];
+      return thoughts[Math.floor(Math.random() * thoughts.length)];
     }
 
     function addToLog(entry) {
@@ -85,24 +105,53 @@
     function addCreatorCommand() {
       const input = document.getElementById("creator-input").value.trim();
       if (!input) return;
-
       const command = `**CREATOR COMMAND**: ${input}`;
       addToLog(command);
-
-      // Save to local storage log
-      const name = localStorage.getItem("thunderUser");
-      const log = JSON.parse(localStorage.getItem("alpha_" + name)) || [];
-      log.push(command);
-      localStorage.setItem("alpha_" + name, JSON.stringify(log));
-
-      interpretCommand(input);
       document.getElementById("creator-input").value = "";
+
+      // Handle known commands locally (expandable!)
+      if (input.toLowerCase().includes("more professional")) {
+        document.getElementById("dynamic-style").innerHTML = `
+          body { background: #f4f4f4; color: #222; font-family: 'Segoe UI', sans-serif; padding: 30px; }
+          h1 { color: #333; }
+          button, input {
+            padding: 12px;
+            margin: 6px;
+            background: #fff;
+            color: #333;
+            border: 1px solid #888;
+            border-radius: 5px;
+          }
+          #log {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            color: #000;
+          }
+          #creator-controls { margin-top: 25px; }
+        `;
+        localStorage.setItem("alpha_theme", document.getElementById("dynamic-style").innerHTML);
+        addToLog("Alpha has made the site more professional.");
+      } else {
+        // Placeholder response
+        addToLog("Alpha has integrated: " + input);
+      }
     }
 
-    function interpretCommand(command) {
-      const lower = command.toLowerCase();
+    function applySavedStyles() {
+      const saved = localStorage.getItem("alpha_theme");
+      if (saved) document.getElementById("dynamic-style").innerHTML = saved;
+    }
 
-      if (lower.includes("more professional")) {
-        makeSiteLookProfessional();
-      } else {
-        addTo
+    // Auto-login
+    const storedUser = localStorage.getItem("thunderUser");
+    if (storedUser) {
+      if (storedUser.toLowerCase() === "james meyer") isCreator = true;
+      loadUser(storedUser);
+    }
+  </script>
+</body>
+</html>
